@@ -30,6 +30,7 @@ inline bool EnableESP = false;
 inline bool Nametags = false;
 inline bool Boxes = false;
 inline bool fovc = false;
+inline bool cross = false;
 inline bool Skeletons = false;
 inline bool Snaplines = false;
 inline float SnaplinesY = 0.f;
@@ -40,6 +41,7 @@ inline bool VisibleOnly = false;
 inline FLinearColor ESPColor = FLinearColor{ 1.f, 0.f, 0.f, 1.f };
 inline FLinearColor ESPTeamColor = FLinearColor{ 0.f, 1.f, 0.f, 1.f };
 inline FLinearColor Circlecolor = FLinearColor{ 1.f, 0.f, 0.f, 1.f };
+inline FLinearColor crosscolor = FLinearColor{ 1.f, 0.f, 0.f, 1.f };
 inline FLinearColor ESPEnemyColor = FLinearColor{ 1.f, 0.f, 0.f, 1.f };
 inline FLinearColor ESPVisibleColor = rgb2rgbfl(252, 232, 3);
 
@@ -189,7 +191,7 @@ void Tick()
         }
 
         if (tab == 1) {
-            WindowSize = FVector2D{ 500.0f, 600.0f };
+            WindowSize = FVector2D{ 500.0f, 650.0f };
             ZeroGUI::Text((char*)"VS");
             ZeroGUI::Checkbox((char*)"Enable ESP", &EnableESP);
             
@@ -198,26 +200,22 @@ void Tick()
             ZeroGUI::Checkbox((char*)"Boxes", &Boxes);
             
             ZeroGUI::Checkbox((char*)"FOV Circle", &fovc);
-            
+
+            ZeroGUI::Checkbox((char*)"Crosshair", &cross);
             ZeroGUI::Checkbox((char*)"Snaplines", &Snaplines);
             ZeroGUI::PushNextElementY(16.0f);
             ZeroGUI::Checkbox((char*)"Ignore Team", &IgnoreTeamESP);
             
             ZeroGUI::Checkbox((char*)"Visible Colors", &VisibleColors);
-            
             ZeroGUI::Checkbox((char*)"Visible Only", &VisibleOnly);
             ZeroGUI::SliderFloat((char*)"Snaplines X", &SnaplinesX, 0.f, horizontal, (char*)"%.0f");
-            
             ZeroGUI::SliderFloat((char*)"Snaplines Y", &SnaplinesY, 0.f, vertical, (char*)"%.0f");
             ZeroGUI::PushNextElementY(12.0f);
-            ZeroGUI::ColorPicker((char*)"Global Color", &ESPColor);
-            
-            ZeroGUI::ColorPicker((char*)"Team Color", &ESPTeamColor);
-            
             ZeroGUI::ColorPicker((char*)"Fov Circle Color", &Circlecolor);
-            
+            ZeroGUI::ColorPicker((char*)"Crosshair Color", &crosscolor);
+            ZeroGUI::ColorPicker((char*)"Global Color", &ESPColor);
+            ZeroGUI::ColorPicker((char*)"Team Color", &ESPTeamColor);
             ZeroGUI::ColorPicker((char*)"Enemy Color", &ESPEnemyColor);
-            
             ZeroGUI::ColorPicker((char*)"Visible Color", &ESPVisibleColor);
 
         }
@@ -482,8 +480,22 @@ void posthook(UGameViewportClient* vp_client, UCanvas* canvas)
         ULocalPlayer* localplayer = gworld->OwningGameInstance->LocalPlayers[0];
         Nullcheck(localplayer);
         if (fovc) {
-            DrawCircle(FVector2D(960, 540), 120, 32, Circlecolor);
+            DrawCircle(FVector2D(960, 540), 160, 32, Circlecolor);
 
+        }
+        if (cross) {
+            FVector2D screenMiddle = FVector2D(960, 540);
+
+            // Draw the vertical line of the crosshair
+            FVector2D vStart = screenMiddle + FVector2D(0, -20 / 2);
+            FVector2D vEnd = screenMiddle + FVector2D(0, 20 / 2);
+            Draw_Line(vStart, vEnd, 2, crosscolor);
+
+            // Draw the horizontal line of the crosshair
+            FVector2D hStart = screenMiddle + FVector2D(-20 / 2, 0);
+            FVector2D hEnd = screenMiddle + FVector2D(20 / 2, 0);
+            Draw_Line(hStart, hEnd, 2, crosscolor);
+            
         }
         if (canvas && EnableESP) {
             auto pArray = GameState->PlayerArray;
