@@ -481,7 +481,10 @@ void posthook(UGameViewportClient* vp_client, UCanvas* canvas)
         Nullcheck(gworld);
         ULocalPlayer* localplayer = gworld->OwningGameInstance->LocalPlayers[0];
         Nullcheck(localplayer);
-      
+        if (fovc) {
+            DrawCircle(FVector2D(960, 540), 120, 32, Circlecolor);
+
+        }
         if (canvas && EnableESP) {
             auto pArray = GameState->PlayerArray;
             if (pArray.Count() > 1) {
@@ -746,10 +749,7 @@ void posthook(UGameViewportClient* vp_client, UCanvas* canvas)
                                     }
                                 }
                             }
-                            if (fovc) {
-                                DrawCircle(FVector2D(screen.X, screen.Y - 10), 1, 32, Circlecolor);
-
-                            }
+                           
                         }
                     }
                 }
