@@ -30,6 +30,8 @@ inline int AimbotKey = 1;
 inline bool EnableESP = false;
 inline bool Nametags = false;
 inline bool Boxes = false;
+inline bool cornerbox = false;
+
 inline bool timechanges = false;
 inline bool fovc = false;
 inline bool cross = false;
@@ -41,6 +43,7 @@ inline bool IgnoreTeamESP = false;
 inline bool VisibleColors = false;
 inline bool VisibleOnly = false;
 inline FLinearColor ESPColor = FLinearColor{ 1.f, 0.f, 0.f, 1.f };
+
 inline FLinearColor ESPTeamColor = FLinearColor{ 0.f, 1.f, 0.f, 1.f };
 inline FLinearColor Circlecolor = FLinearColor{ 1.f, 0.f, 0.f, 1.f };
 inline FLinearColor crosscolor = FLinearColor{ 1.f, 0.f, 0.f, 1.f };
@@ -208,7 +211,7 @@ void Tick()
     static bool menu_opened = false;
     if (GetAsyncKeyState(MenuKey) & 1) menu_opened = !menu_opened; //Our menu key
     
-    if (ZeroGUI::Window((char*)"Buck3ts41 Internal v1.7", &pos, WindowSize, menu_opened))
+    if (ZeroGUI::Window((char*)"Buck3ts41 Internal v2.0", &pos, WindowSize, menu_opened))
     {
         static int tab = 0;
         if (ZeroGUI::ButtonTab((char*)"Aimbot", FVector2D{ 100, 15 }, tab == 0)) tab = 0;
@@ -220,15 +223,20 @@ void Tick()
         if (ZeroGUI::ButtonTab((char*)"Miscellaneous", FVector2D{ 100, 15 }, tab == 3)) tab = 3;
         ZeroGUI::SameLine();
         if (tab == 0) {
-            WindowSize = FVector2D{ 500.0f, 500.0f };
+            WindowSize = FVector2D{ 500.0f, 550.0f };
             ZeroGUI::Text((char*)"Aim");
             ZeroGUI::Checkbox((char*)"Enable Aimbot [need update]", &EnableAimbot);
             
             ZeroGUI::Checkbox((char*)"Visible Only [need update]", &AimbotVisibleOnly);
             
             ZeroGUI::Checkbox((char*)"Target Team [need update]", &AimbotTargetTeam);
+            ZeroGUI::Checkbox((char*)"FOV Circle", &fovc);
+
+            ZeroGUI::Checkbox((char*)"Crosshair", &cross);
             
             ZeroGUI::Hotkey((char*)"Aimbot Key [need update]", FVector2D{ 80, 25 }, &AimbotKey);
+            ZeroGUI::ColorPicker((char*)"Fov Circle Color", &Circlecolor);
+            ZeroGUI::ColorPicker((char*)"Crosshair Color", &crosscolor);
         }
 
         if (tab == 2) {
@@ -252,7 +260,7 @@ void Tick()
         }
 
         if (tab == 1) {
-            WindowSize = FVector2D{ 500.0f, 650.0f };
+            WindowSize = FVector2D{ 500.0f, 600.0f };
             ZeroGUI::Text((char*)"VS");
             ZeroGUI::Checkbox((char*)"Enable ESP", &EnableESP);
             
@@ -260,9 +268,7 @@ void Tick()
             
             ZeroGUI::Checkbox((char*)"Boxes", &Boxes);
             
-            ZeroGUI::Checkbox((char*)"FOV Circle", &fovc);
-
-            ZeroGUI::Checkbox((char*)"Crosshair", &cross);
+            ZeroGUI::Checkbox((char*)"Corner Box", &cornerbox);
             ZeroGUI::Checkbox((char*)"Snaplines", &Snaplines);
             ZeroGUI::PushNextElementY(16.0f);
             ZeroGUI::Checkbox((char*)"Ignore Team", &IgnoreTeamESP);
@@ -272,8 +278,7 @@ void Tick()
             ZeroGUI::SliderFloat((char*)"Snaplines X", &SnaplinesX, 0.f, horizontal, (char*)"%.0f");
             ZeroGUI::SliderFloat((char*)"Snaplines Y", &SnaplinesY, 0.f, vertical, (char*)"%.0f");
             ZeroGUI::PushNextElementY(12.0f);
-            ZeroGUI::ColorPicker((char*)"Fov Circle Color", &Circlecolor);
-            ZeroGUI::ColorPicker((char*)"Crosshair Color", &crosscolor);
+            
             ZeroGUI::ColorPicker((char*)"Global Color", &ESPColor);
             ZeroGUI::ColorPicker((char*)"Team Color", &ESPTeamColor);
             ZeroGUI::ColorPicker((char*)"Enemy Color", &ESPEnemyColor);
@@ -438,6 +443,28 @@ inline void DrawBox(UCanvas* canvas, FVector2D TopLeft, FVector2D DownRight, FLi
     DrawLine(canvas, topright, { topright.X, topright.Y + h * 1 }, Thickness, Color);
     DrawLine(canvas, topright, { topright.X - w * 1, topright.Y }, Thickness, Color);
 }
+inline void DrawBoxCorners(UCanvas* canvas, FVector2D TopLeft, FVector2D DownRight, FLinearColor Color, float Thickness)
+{
+    auto downleft = FVector2D{ TopLeft.X, DownRight.Y };
+    auto topright = FVector2D{ DownRight.X, TopLeft.Y };
+
+    // Top left corner
+    DrawLine(canvas, TopLeft, { TopLeft.X + Thickness, TopLeft.Y }, Thickness, Color);
+    DrawLine(canvas, TopLeft, { TopLeft.X, TopLeft.Y + Thickness }, Thickness, Color);
+
+    // Top right corner
+    DrawLine(canvas, { topright.X - Thickness, topright.Y }, topright, Thickness, Color);
+    DrawLine(canvas, { topright.X, topright.Y + Thickness }, topright, Thickness, Color);
+
+    // Bottom right corner
+    DrawLine(canvas, DownRight, { DownRight.X - Thickness, DownRight.Y }, Thickness, Color);
+    DrawLine(canvas, DownRight, { DownRight.X, DownRight.Y - Thickness }, Thickness, Color);
+
+    // Bottom left corner
+    DrawLine(canvas, { downleft.X + Thickness, downleft.Y }, downleft, Thickness, Color);
+    DrawLine(canvas, { downleft.X, downleft.Y - Thickness }, downleft, Thickness, Color);
+}
+
 
 FVector inline VectorSubtract(FVector Vector1, FVector Vector2)
 {
@@ -827,6 +854,131 @@ void posthook(UGameViewportClient* vp_client, UCanvas* canvas)
                                 }
                             }
                            
+                        }
+                        if (cornerbox) {
+                            if (IgnoreTeamESP) {
+                                if (Character->TeamNum != SelfPlayer->TeamNum) {
+                                    FVector ActorLoc;
+                                    FVector BoxExtent;
+
+                                    Character->GetActorBounds(true, &ActorLoc, &BoxExtent, false);
+                                    auto rotation = Character->K2_GetActorRotation();
+
+                                    FVector foot_location = { ActorLoc.X , ActorLoc.Y, ActorLoc.Z + (BoxExtent.Z) };
+                                    FVector head_location = { ActorLoc.X , ActorLoc.Y, ActorLoc.Z - (BoxExtent.Z) };
+
+                                    FVector2D head_pos, foot_pos;
+
+                                    if (localplayer->PlayerController->ProjectWorldLocationToScreen(foot_location, &foot_pos, false) && localplayer->PlayerController->ProjectWorldLocationToScreen(head_location, &head_pos, false)) {
+                                        FVector2D w2sRes;
+                                        if (localplayer->PlayerController->ProjectWorldLocationToScreen(ActorLoc, &w2sRes, false)) {
+                                            const float h = abs(foot_pos.Y - head_pos.Y) * 0.75f;
+                                            const float w = h * 0.60f;
+
+                                            FVector2D top = { head_pos.X - w * 0.5f, head_pos.Y };
+                                            FVector2D bottom = { head_pos.X + w * 0.5f, foot_pos.Y };
+
+                                            if (VisibleColors) {
+                                                if (VisibleOnly && is_visible) {
+                                                    DrawBoxCorners(canvas, top, bottom, ESPVisibleColor, 1.8f);
+                                                }
+                                                else if (!VisibleOnly) {
+                                                    if (is_visible) {
+                                                        DrawBoxCorners(canvas, top, bottom, ESPVisibleColor, 1.8f);
+                                                    }
+                                                    else {
+                                                        DrawBoxCorners(canvas, top, bottom, ESPColor, 1.8f);
+                                                    }
+                                                }
+                                            }
+                                            else {
+                                                DrawBoxCorners(canvas, top, bottom, ESPColor, 1.8f);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                if (Character->TeamNum != SelfPlayer->TeamNum) {
+                                    FVector ActorLoc;
+                                    FVector BoxExtent;
+
+                                    Character->GetActorBounds(true, &ActorLoc, &BoxExtent, false);
+                                    auto rotation = Character->K2_GetActorRotation();
+
+                                    FVector foot_location = { ActorLoc.X , ActorLoc.Y, ActorLoc.Z + (BoxExtent.Z) };
+                                    FVector head_location = { ActorLoc.X , ActorLoc.Y, ActorLoc.Z - (BoxExtent.Z) };
+
+                                    FVector2D head_pos, foot_pos;
+
+                                    if (localplayer->PlayerController->ProjectWorldLocationToScreen(foot_location, &foot_pos, false) && localplayer->PlayerController->ProjectWorldLocationToScreen(head_location, &head_pos, false)) {
+                                        FVector2D w2sRes;
+                                        if (localplayer->PlayerController->ProjectWorldLocationToScreen(ActorLoc, &w2sRes, false)) {
+                                            const float h = abs(foot_pos.Y - head_pos.Y) * 0.75f;
+                                            const float w = h * 0.60f;
+
+                                            FVector2D top = { head_pos.X - w * 0.5f, head_pos.Y };
+                                            FVector2D bottom = { head_pos.X + w * 0.5f, foot_pos.Y };
+                                            if (VisibleColors) {
+                                                if (VisibleOnly && is_visible) {
+                                                    DrawBoxCorners(canvas, top, bottom, ESPVisibleColor, 1.8f);
+                                                }
+                                                else if (!VisibleOnly) {
+                                                    if (is_visible) {
+                                                        DrawBoxCorners(canvas, top, bottom, ESPVisibleColor, 1.8f);
+                                                    }
+                                                    else {
+                                                        DrawBoxCorners(canvas, top, bottom, ESPEnemyColor, 1.8f);
+                                                    }
+                                                }
+                                            }
+                                            else {
+                                                DrawBoxCorners(canvas, top, bottom, ESPEnemyColor, 1.8f);
+                                            }
+                                        }
+                                    }
+                                }
+                                else {
+                                    FVector ActorLoc;
+                                    FVector BoxExtent;
+
+                                    Character->GetActorBounds(true, &ActorLoc, &BoxExtent, false);
+                                    auto rotation = Character->K2_GetActorRotation();
+
+                                    FVector foot_location = { ActorLoc.X , ActorLoc.Y, ActorLoc.Z + (BoxExtent.Z) };
+                                    FVector head_location = { ActorLoc.X , ActorLoc.Y, ActorLoc.Z - (BoxExtent.Z) };
+
+                                    FVector2D head_pos, foot_pos;
+
+                                    if (localplayer->PlayerController->ProjectWorldLocationToScreen(foot_location, &foot_pos, false) && localplayer->PlayerController->ProjectWorldLocationToScreen(head_location, &head_pos, false)) {
+                                        FVector2D w2sRes;
+                                        if (localplayer->PlayerController->ProjectWorldLocationToScreen(ActorLoc, &w2sRes, false)) {
+                                            const float h = abs(foot_pos.Y - head_pos.Y) * 0.75f;
+                                            const float w = h * 0.60f;
+
+                                            FVector2D top = { head_pos.X - w * 0.5f, head_pos.Y };
+                                            FVector2D bottom = { head_pos.X + w * 0.5f, foot_pos.Y };
+                                            if (VisibleColors) {
+                                                if (VisibleOnly && is_visible) {
+                                                    DrawBoxCorners(canvas, top, bottom, ESPVisibleColor, 1.8f);
+                                                }
+                                                else if (!VisibleOnly) {
+                                                    if (is_visible) {
+                                                        DrawBoxCorners(canvas, top, bottom, ESPVisibleColor, 1.8f);
+                                                    }
+                                                    else {
+                                                        DrawBoxCorners(canvas, top, bottom, ESPTeamColor, 1.8f);
+                                                    }
+                                                }
+                                            }
+                                            else {
+                                                DrawBoxCorners(canvas, top, bottom, ESPTeamColor, 1.8f);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                         }
                     }
                 }
