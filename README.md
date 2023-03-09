@@ -29,7 +29,7 @@ Compile in Release x64
 
 After compiling inject in game.
 
-![Screenshot](screenshot.png)
+![Screenshot](newscreenshot.png)
 
 # Credits
 
