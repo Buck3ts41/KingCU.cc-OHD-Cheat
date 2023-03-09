@@ -285,7 +285,7 @@ void Tick()
             WindowSize = FVector2D{ 500.0f, 500.0f };
             ZeroGUI::Text((char*)"EX");
             ZeroGUI::Checkbox((char*)"Fly", &Fly);
-            ZeroGUI::Checkbox((char*)"Time Change", &timechanges);
+            ZeroGUI::Checkbox((char*)"Night Vision", &timechanges);
             ZeroGUI::Checkbox((char*)"Noclip", &Noclip);
             
             ZeroGUI::Checkbox((char*)"Desync", &Desync);
