@@ -1,10 +1,10 @@
 # Update
 
-updated 06/03/2023
+updated 09/03/2023
 
 # KingCU.cc-OHD-Cheat
 
-Operation: Harsh Doortstop- Updated 06/03/2023
+Operation: Harsh Doortstop- Updated 09/03/2023
 
 This is a POC project, made just for fun.
 For now is undetected, i will update sdk when new ohd version will release.
