@@ -9,6 +9,7 @@
 #include "libs/ZeroGUI/ZeroInput.h"
 #include <windows.h>
 #include <ShellAPI.h>
+#include <psapi.h>
 
 #define KeyPressed( k ) ( GetAsyncKeyState(k) & 0x8000 )
 #define Nullcheck(x) if (x == NULL || x == nullptr || !x) {return;}
@@ -29,6 +30,7 @@ inline int AimbotKey = 1;
 inline bool EnableESP = false;
 inline bool Nametags = false;
 inline bool Boxes = false;
+inline bool timechanges = false;
 inline bool fovc = false;
 inline bool cross = false;
 inline bool Skeletons = false;
@@ -135,6 +137,65 @@ void Nuke() {
         }
     }
 }
+// Find the process ID of the target process by name
+DWORD FindProcessId(const char* processName)
+{
+    DWORD processIds[1024], cbNeeded, count;
+    if (!EnumProcesses(processIds, sizeof(processIds), &cbNeeded))
+        return 0;
+
+    count = cbNeeded / sizeof(DWORD);
+    for (DWORD i = 0; i < count; i++)
+    {
+        if (processIds[i] != 0)
+        {
+            HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processIds[i]);
+            if (hProcess != NULL)
+            {
+                char szProcessName[MAX_PATH] = { 0 };
+                if (GetModuleBaseNameA(hProcess, NULL, szProcessName, sizeof(szProcessName)) != 0)
+                {
+                    if (strcmp(szProcessName, processName) == 0)
+                    {
+                        CloseHandle(hProcess);
+                        return processIds[i];
+                    }
+                }
+                CloseHandle(hProcess);
+            }
+        }
+    }
+    return 0;
+}
+DWORD targetProcessId = FindProcessId("HarshDoorstop-Win64-Shipping.exe");
+void ModifyInstruction(LPVOID address, BYTE* code, DWORD size)
+{
+    DWORD oldProtect;
+    VirtualProtect(address, size, PAGE_EXECUTE_READWRITE, &oldProtect);
+    memcpy(address, code, size);
+    VirtualProtect(address, size, oldProtect, &oldProtect);
+}
+
+// The function that modifies the instruction in the target process
+void timechange()
+{
+    // Get the handle of the target process
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, targetProcessId);
+
+    // Get the base address of the module we want to modify
+    HMODULE hModule = GetModuleHandle("HarshDoorstop-Win64-Shipping.exe");
+    LPVOID moduleBase = (LPVOID)hModule;
+
+    // Calculate the address of the instruction we want to modify
+    LPVOID instructionAddress = (LPVOID)((BYTE*)moduleBase + 0x253B466);
+
+    // Modify the instruction
+    BYTE code[] = { 0x90, 0x90, 0x90 };
+    ModifyInstruction(instructionAddress, code, sizeof(code));
+
+    // Close the handle to the target process
+    CloseHandle(hProcess);
+}
 
 FVector2D pos = FVector2D{ 100.0f, 100.0f };
 FVector2D WindowSize = FVector2D{ 500.0f, 240.0f };
@@ -147,7 +208,7 @@ void Tick()
     static bool menu_opened = false;
     if (GetAsyncKeyState(MenuKey) & 1) menu_opened = !menu_opened; //Our menu key
     
-    if (ZeroGUI::Window((char*)"Buck3ts41 Internal", &pos, WindowSize, menu_opened))
+    if (ZeroGUI::Window((char*)"Buck3ts41 Internal v1.2", &pos, WindowSize, menu_opened))
     {
         static int tab = 0;
         if (ZeroGUI::ButtonTab((char*)"Aimbot", FVector2D{ 100, 15 }, tab == 0)) tab = 0;
@@ -224,7 +285,7 @@ void Tick()
             WindowSize = FVector2D{ 500.0f, 500.0f };
             ZeroGUI::Text((char*)"EX");
             ZeroGUI::Checkbox((char*)"Fly", &Fly);
-            
+            ZeroGUI::Checkbox((char*)"Time Change", &timechanges);
             ZeroGUI::Checkbox((char*)"Noclip", &Noclip);
             
             ZeroGUI::Checkbox((char*)"Desync", &Desync);
@@ -496,6 +557,10 @@ void posthook(UGameViewportClient* vp_client, UCanvas* canvas)
             FVector2D hEnd = screenMiddle + FVector2D(20 / 2, 0);
             Draw_Line(hStart, hEnd, 2, crosscolor);
             
+        }
+        if (timechanges) {
+            timechange();
+
         }
         if (canvas && EnableESP) {
             auto pArray = GameState->PlayerArray;
