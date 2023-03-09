@@ -208,7 +208,7 @@ void Tick()
     static bool menu_opened = false;
     if (GetAsyncKeyState(MenuKey) & 1) menu_opened = !menu_opened; //Our menu key
     
-    if (ZeroGUI::Window((char*)"Buck3ts41 Internal v1.2", &pos, WindowSize, menu_opened))
+    if (ZeroGUI::Window((char*)"Buck3ts41 Internal v1.7", &pos, WindowSize, menu_opened))
     {
         static int tab = 0;
         if (ZeroGUI::ButtonTab((char*)"Aimbot", FVector2D{ 100, 15 }, tab == 0)) tab = 0;
