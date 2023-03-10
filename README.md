@@ -1,10 +1,10 @@
 # Update
-
-updated 09/03/2023
+unkonwcheats --> https://www.unknowncheats.me/forum/other-fps-games/574319-operation-harsh-doorstop-internal.html#post3698911
+updated 10/03/2023
 
 # KingCU.cc-OHD-Cheat
 
-Operation: Harsh Doortstop- Updated 09/03/2023
+Operation: Harsh Doortstop- Updated 10/03/2023
 
 This is a POC project, made just for fun.
 For now is undetected, i will update sdk when new ohd version will release.
@@ -35,3 +35,4 @@ After compiling inject in game.
 
 DevArilis
 DavCU820 
+aliababa
