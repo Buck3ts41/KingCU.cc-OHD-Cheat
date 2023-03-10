@@ -31,8 +31,9 @@ inline bool EnableESP = false;
 inline bool Nametags = false;
 inline bool Boxes = false;
 inline bool cornerbox = false;
-
-inline bool timechanges = false;
+inline bool daytime = false;
+inline bool nightmode = false;
+inline bool nightmode2 = false;
 inline bool fovc = false;
 inline bool cross = false;
 inline bool Skeletons = false;
@@ -171,6 +172,7 @@ DWORD FindProcessId(const char* processName)
     return 0;
 }
 DWORD targetProcessId = FindProcessId("HarshDoorstop-Win64-Shipping.exe");
+
 void ModifyInstruction(LPVOID address, BYTE* code, DWORD size)
 {
     DWORD oldProtect;
@@ -180,25 +182,55 @@ void ModifyInstruction(LPVOID address, BYTE* code, DWORD size)
 }
 
 // The function that modifies the instruction in the target process
-void timechange()
-{
-    // Get the handle of the target process
+void nightON()
+{ 
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, targetProcessId);
-
-    // Get the base address of the module we want to modify
     HMODULE hModule = GetModuleHandle("HarshDoorstop-Win64-Shipping.exe");
     LPVOID moduleBase = (LPVOID)hModule;
-
+    
     // Calculate the address of the instruction we want to modify
-    LPVOID instructionAddress = (LPVOID)((BYTE*)moduleBase + 0x253B466);
+    LPVOID instructionAddress = (LPVOID)((BYTE*)moduleBase + 0x253B504);
 
     // Modify the instruction
-    BYTE code[] = { 0x90, 0x90, 0x90 };
+    BYTE code[] = { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 };
     ModifyInstruction(instructionAddress, code, sizeof(code));
 
     // Close the handle to the target process
     CloseHandle(hProcess);
 }
+void nightOFF()
+{
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, targetProcessId);
+    HMODULE hModule = GetModuleHandle("HarshDoorstop-Win64-Shipping.exe");
+    LPVOID moduleBase = (LPVOID)hModule;
+
+    // Calculate the address of the instruction we want to modify
+    LPVOID instructionAddress = (LPVOID)((BYTE*)moduleBase + 0x253B504);
+
+    // Modify the instruction
+    BYTE code[] = { 0x0F, 0x28, 0x05, 0xF5, 0x56, 0xA3, 0x00 };
+    ModifyInstruction(instructionAddress, code, sizeof(code));
+
+    // Close the handle to the target process
+    CloseHandle(hProcess);
+}
+
+void tymeday()
+{
+    
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, targetProcessId);
+    HMODULE hModule = GetModuleHandle("HarshDoorstop-Win64-Shipping.exe");
+    LPVOID moduleBase = (LPVOID)hModule;
+    LPVOID instructionAddress = (LPVOID)((BYTE*)moduleBase + 0x255005C);
+
+    // Modify the instruction
+    BYTE code[] = { 0xF3, 0x44, 0x0F, 0x10, 0x0D, 0xFB, 0x4F, 0xA2, 0x00 };
+    ModifyInstruction(instructionAddress, code, sizeof(code));
+
+    // Close the handle to the target process
+    CloseHandle(hProcess);
+}
+
 
 FVector2D pos = FVector2D{ 100.0f, 100.0f };
 FVector2D WindowSize = FVector2D{ 500.0f, 240.0f };
@@ -211,7 +243,7 @@ void Tick()
     static bool menu_opened = false;
     if (GetAsyncKeyState(MenuKey) & 1) menu_opened = !menu_opened; //Our menu key
     
-    if (ZeroGUI::Window((char*)"Buck3ts41 Internal v2.0", &pos, WindowSize, menu_opened))
+    if (ZeroGUI::Window((char*)"Buck3ts41 Internal v2.1", &pos, WindowSize, menu_opened))
     {
         static int tab = 0;
         if (ZeroGUI::ButtonTab((char*)"Aimbot", FVector2D{ 100, 15 }, tab == 0)) tab = 0;
@@ -290,7 +322,9 @@ void Tick()
             WindowSize = FVector2D{ 500.0f, 500.0f };
             ZeroGUI::Text((char*)"EX");
             ZeroGUI::Checkbox((char*)"Fly", &Fly);
-            ZeroGUI::Checkbox((char*)"Night Vision", &timechanges);
+            ZeroGUI::Checkbox((char*)"Night Vision ON", &nightmode);
+            ZeroGUI::Checkbox((char*)"Night Vision OFF", &nightmode2);
+            ZeroGUI::Checkbox((char*)"Night to Day", &daytime);
             ZeroGUI::Checkbox((char*)"Noclip", &Noclip);
             
             ZeroGUI::Checkbox((char*)"Desync", &Desync);
@@ -300,8 +334,8 @@ void Tick()
             ZeroGUI::Text((char*)"Menu Key & Discord Invite");
             ZeroGUI::Hotkey((char*)"Menu Key", FVector2D{ 80, 25 }, &MenuKey);
             
-            if (ZeroGUI::Button((char*)"Join the Discord", FVector2D{ 100, 25 })) {
-                ShellExecute(NULL, NULL, "https://discord.gg/vbkKQSrn", 0, 0, SW_SHOW);
+            if (ZeroGUI::Button((char*)"Unknowcheats", FVector2D{ 100, 25 })) {
+                ShellExecute(NULL, NULL, "https://www.unknowncheats.me/forum/other-fps-games/574319-operation-harsh-doorstop-internal.html", 0, 0, SW_SHOW);
             }
             if (ZeroGUI::Button((char*)"Github", FVector2D{ 115, 25 })) {
                 ShellExecute(NULL, NULL, "https://github.com/Buck3ts41/", 0, 0, SW_SHOW);
@@ -405,6 +439,8 @@ void Tick()
     else {
         Character->bActorEnableCollision = true;
     }
+    
+
 
     bool check = false;
     if (Desync && !Fly) {
@@ -585,10 +621,20 @@ void posthook(UGameViewportClient* vp_client, UCanvas* canvas)
             Draw_Line(hStart, hEnd, 2, crosscolor);
             
         }
-        if (timechanges) {
-            timechange();
-
+        bool nigers = false;
+        if (nightmode and nigers == false) {
+            nightON();
+            nigers == true;
         }
+        if (nightmode2 and nigers == true) {
+            nightOFF();
+            nigers == false;
+        }
+
+        if (daytime) {
+            tymeday();
+        }
+        
         if (canvas && EnableESP) {
             auto pArray = GameState->PlayerArray;
             if (pArray.Count() > 1) {
