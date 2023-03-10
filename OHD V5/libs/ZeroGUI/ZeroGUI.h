@@ -36,16 +36,16 @@ namespace ZeroGUI
 		inline FLinearColor Text_Shadow{ 0.0f, 0.0f, 0.0f, 0.0f };
 		inline FLinearColor Text_Outline{ 0.0f, 0.0f, 0.0f, 0.30f };
 
-		inline auto Window_Header = rgb2rgbfl(248, 18, 252);
+		inline auto Window_Header = rgb2rgbfl(255, 255, 0);
 		inline auto Window_Background = rgb2rgbfl(10, 10, 10);
 
 		inline auto Button_Idle = rgb2rgbfl(16, 16, 16);
 		inline auto Button_Hovered = rgb2rgbfl(22, 22, 22);
-		inline auto Button_Active = rgb2rgbfl(248, 18, 252);
+		inline auto Button_Active = rgb2rgbfl(255, 255, 0);
 
 		inline auto Checkbox_Idle = rgb2rgbfl(25, 25, 25);
 		inline auto Checkbox_Hovered = rgb2rgbfl(30, 30, 30);
-		inline auto Checkbox_Enabled = rgb2rgbfl(248, 18, 252);
+		inline auto Checkbox_Enabled = rgb2rgbfl(255, 255, 0);
 
 		inline FLinearColor Combobox_Idle{ 0.17f, 0.16f, 0.23f, 1.0f };
 		inline FLinearColor Combobox_Hovered{ 0.17f, 0.16f, 0.23f, 1.0f };
@@ -53,7 +53,7 @@ namespace ZeroGUI
 
 		inline auto Slider_Idle = rgb2rgbfl(25, 25, 25);
 		inline auto Slider_Hovered = rgb2rgbfl(30, 30, 30);
-		inline auto Slider_Progress = rgb2rgbfl(248, 18, 252);
+		inline auto Slider_Progress = rgb2rgbfl(255, 255, 0);
 		inline auto Slider_Button = rgb2rgbfl(30, 30, 30);
 
 		inline FLinearColor ColorPicker_Background{ 0.006f, 0.006f, 0.006f, 1.0f };
