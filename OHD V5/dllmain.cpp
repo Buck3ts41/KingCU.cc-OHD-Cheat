@@ -221,10 +221,10 @@ void tymeday()
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, targetProcessId);
     HMODULE hModule = GetModuleHandle("HarshDoorstop-Win64-Shipping.exe");
     LPVOID moduleBase = (LPVOID)hModule;
-    LPVOID instructionAddress = (LPVOID)((BYTE*)moduleBase + 0x255005C);
+    LPVOID instructionAddress = (LPVOID)((BYTE*)moduleBase + 0x253B466);
 
     // Modify the instruction
-    BYTE code[] = { 0xF3, 0x44, 0x0F, 0x10, 0x0D, 0xFB, 0x4F, 0xA2, 0x00 };
+    BYTE code[] = { 0x90, 0x90, 0x90 };
     ModifyInstruction(instructionAddress, code, sizeof(code));
 
     // Close the handle to the target process
