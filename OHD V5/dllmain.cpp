@@ -26,7 +26,9 @@ inline bool EnableAimbot = false;
 inline bool AimbotVisibleOnly = false;
 inline bool AimbotTargetTeam = false;
 inline int AimbotKey = 1;
-
+inline bool nofogingame = false;
+inline bool nofogrenades = false;
+inline bool novegetetioningame = false;
 inline bool EnableESP = false;
 inline bool Nametags = false;
 inline bool Boxes = false;
@@ -231,6 +233,50 @@ void tymeday()
     CloseHandle(hProcess);
 }
 
+void nofog()
+{
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, targetProcessId);
+    HMODULE hModule = GetModuleHandle("HarshDoorstop-Win64-Shipping.exe");
+    LPVOID moduleBase = (LPVOID)hModule;
+    LPVOID instructionAddress = (LPVOID)((BYTE*)moduleBase + 0x12E93BB);
+
+    // Modify the instruction
+    BYTE code[] = { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 };
+    ModifyInstruction(instructionAddress, code, sizeof(code));
+
+    // Close the handle to the target process
+    CloseHandle(hProcess);
+}
+
+void nofoggrenades()
+{
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, targetProcessId);
+    HMODULE hModule = GetModuleHandle("HarshDoorstop-Win64-Shipping.exe");
+    LPVOID moduleBase = (LPVOID)hModule;
+    LPVOID instructionAddress = (LPVOID)((BYTE*)moduleBase + 0x24483D7);
+
+    // Modify the instruction
+    BYTE code[] = { 0x90, 0x90, 0x90, 0x90, 0x90 };
+    ModifyInstruction(instructionAddress, code, sizeof(code));
+
+    // Close the handle to the target process
+    CloseHandle(hProcess);
+}
+
+void novegetetion()
+{
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, targetProcessId);
+    HMODULE hModule = GetModuleHandle("HarshDoorstop-Win64-Shipping.exe");
+    LPVOID moduleBase = (LPVOID)hModule;
+    LPVOID instructionAddress = (LPVOID)((BYTE*)moduleBase + 0x1565323);
+
+    // Modify the instruction
+    BYTE code[] = { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 };
+    ModifyInstruction(instructionAddress, code, sizeof(code));
+
+    // Close the handle to the target process
+    CloseHandle(hProcess);
+}
 
 FVector2D pos = FVector2D{ 100.0f, 100.0f };
 FVector2D WindowSize = FVector2D{ 500.0f, 240.0f };
@@ -243,7 +289,7 @@ void Tick()
     static bool menu_opened = false;
     if (GetAsyncKeyState(MenuKey) & 1) menu_opened = !menu_opened; //Our menu key
     
-    if (ZeroGUI::Window((char*)"Buck3ts41 Internal v2.1", &pos, WindowSize, menu_opened))
+    if (ZeroGUI::Window((char*)"Buck3ts41 Internal v2.5", &pos, WindowSize, menu_opened))
     {
         static int tab = 0;
         if (ZeroGUI::ButtonTab((char*)"Aimbot", FVector2D{ 100, 15 }, tab == 0)) tab = 0;
@@ -252,7 +298,7 @@ void Tick()
         ZeroGUI::SameLine();
         if (ZeroGUI::ButtonTab((char*)"Weapon", FVector2D{ 100, 15 }, tab == 2)) tab = 2;
         ZeroGUI::SameLine();
-        if (ZeroGUI::ButtonTab((char*)"Miscellaneous", FVector2D{ 100, 15 }, tab == 3)) tab = 3;
+        if (ZeroGUI::ButtonTab((char*)"Misc", FVector2D{ 100, 15 }, tab == 3)) tab = 3;
         ZeroGUI::SameLine();
         if (tab == 0) {
             WindowSize = FVector2D{ 500.0f, 550.0f };
@@ -319,17 +365,17 @@ void Tick()
         }
 
         if (tab == 3) {
-            WindowSize = FVector2D{ 500.0f, 500.0f };
+            WindowSize = FVector2D{ 500.0f, 575.0f };
             ZeroGUI::Text((char*)"EX");
             ZeroGUI::Checkbox((char*)"Fly", &Fly);
-            ZeroGUI::Checkbox((char*)"Night Vision ON", &nightmode);
-            ZeroGUI::Checkbox((char*)"Night Vision OFF", &nightmode2);
-            ZeroGUI::Checkbox((char*)"Night to Day", &daytime);
             ZeroGUI::Checkbox((char*)"Noclip", &Noclip);
-            
+            ZeroGUI::Checkbox((char*)"Night Vision", &nightmode);
+            ZeroGUI::Checkbox((char*)"No fog", &nofogingame);
+            ZeroGUI::Checkbox((char*)"No Smoke", &nofogrenades);
+            ZeroGUI::Checkbox((char*)"No Foliage", &novegetetioningame);
+            ZeroGUI::Checkbox((char*)"Night to Day", &daytime);
             ZeroGUI::Checkbox((char*)"Desync", &Desync);
             ZeroGUI::SliderFloat((char*)"Speed", &Speed, 1.f, 5.f, (char*)"%.00f");
-            
             ZeroGUI::SliderFloat((char*)"FOV", &FOV, 70.f, 160.f, (char*)"%.0f");
             ZeroGUI::Text((char*)"Menu Key & Discord Invite");
             ZeroGUI::Hotkey((char*)"Menu Key", FVector2D{ 80, 25 }, &MenuKey);
@@ -633,6 +679,15 @@ void posthook(UGameViewportClient* vp_client, UCanvas* canvas)
 
         if (daytime) {
             tymeday();
+        }
+        if (nofogingame) {
+            nofog();
+        }
+        if (nofogrenades) {
+            nofoggrenades();
+        }
+        if (novegetetioningame) {
+            novegetetion();
         }
         
         if (canvas && EnableESP) {
